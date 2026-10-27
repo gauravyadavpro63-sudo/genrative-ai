@@ -411,3 +411,197 @@ Attention = help the model determine which tokens are relevant to one another.
 
 
 
+What is langchain ?
+
+
+What is LangChain?
+LangChain is a framework that helps you build applications powered by Large Language Models (LLMs) such as GPT, Gemini, and Claude.
+
+It provides tools to connect an LLM with your data, APIs, databases, documents, and other components so you can build useful AI applications.
+
+
+8 core components of langchain 
+
+
+1. Models — The brain 🧠
+A model is the LLM your application communicates with, such as Gemini, GPT, or Claude.
+
+Why do we need it? To understand instructions, generate answers, and decide which tools may help complete a task.
+
+Example:
+response = model.invoke(    "Explain why this C++ solution fails")print(response.content)
+
+
+
+Here, invoke() sends the input to the model and returns its response.
+
+You can also use a model directly without building an agent. 
+Docs by LangChain
+
+2. Messages — The conversation format 💬
+A message represents a piece of information exchanged between the user, AI, or a tool.
+
+For example:
+HumanMessage
+
+"Why does my binary search fail?"
+
+AIMessage
+
+"Your loop condition may be incorrect."
+
+ToolMessage
+
+"Retrieved submission: the loop uses left less than right."
+
+
+Common message types include:
+- SystemMessage — instructions defining the assistant's behavior.
+- HumanMessage — input from the user.
+- AIMessage — the model's response, which may include tool-call requests.
+- ToolMessage — the result returned by a tool.
+Messages can also contain metadata and non-text content, such as images. 
+Docs by LangChain
+
+3. Tools — The hands 🛠️
+An LLM can generate text, but it cannot automatically access your private database or execute your application's functions.
+
+Tools let an agent interact with external systems.
+
+For BITGODS, you might create tools to:
+- Retrieve a user's submissions.
+- Fetch a problem from MongoDB.
+- Run code against test cases.
+- Search programming documentation.
+For example:
+from langchain.tools import tool@tooldef get_submission(submission_id: str) -> str:    """Retrieve a submission by its ID."""    # Your database lookup goes here    return "Submission failed: wrong answer"
+
+
+
+The decorator makes the function available as a LangChain tool. The function above is illustrative; the database lookup still needs to be implemented.
+
+The model can decide to request the tool, and the agent framework manages the tool-call workflow. Actual execution must still follow your application's permissions and safety checks. 
+Docs by LangChain
+
+4. Agents — The decision-maker 🤖
+An agent combines a model with tools and instructions. It can repeatedly decide what to do, use a tool, inspect its result, and decide what to do next.
+
+Imagine this request:
+
+"Find my last failed submission and explain the error."
+
+The agent might follow this process:
+1. Understand the request
+
+The user wants their latest failed submission.
+
+2. Select a tool
+
+Call the submission lookup function.
+
+3. Inspect the result
+
+Read the submission and error details.
+
+4. Answer the user
+
+Explain the error and suggest a fix.
+
+
+You don't have to hardcode every step of the decision-making process. The model helps decide which tool to use and whether more steps are needed. 
+Docs by LangChain
+
+
+Remember: A model is the brain; an agent is the model operating within a tool-using workflow.
+5. Short-term memory — Remembering the current conversation 🧩
+Suppose you ask:
+1. "Explain binary search."
+2. "Now show me the iterative C++ version."
+3. "Can you optimize it?"
+The third request depends on the earlier conversation.
+
+Short-term memory allows an agent to retain relevant information from earlier interactions in the same conversation or thread.
+
+Without it, you may need to resend the relevant context each time.
+
+LangChain agents can manage conversation state, with a checkpointer used to persist that state when needed. This is different from long-term memory, which stores information across conversations. 
+Docs by LangChain
+
+6. Streaming — Showing the answer as it is generated ⚡
+Imagine asking an AI to explain dynamic programming.
+
+Without streaming, your interface may wait for the entire answer before displaying anything.
+
+With streaming, the answer appears progressively:
+Example of progressive output
+Dynamic programming is...
+Dynamic programming is a technique that solves...
+Dynamic programming is a technique that solves problems by reusing solutions to smaller subproblems.
+
+Streaming improves perceived responsiveness because users can start reading before generation finishes. LangChain can stream model output and agent progress. 
+Docs by LangChain
+
+7. Event streaming — Showing what the agent is doing
+This is related to streaming, but the focus is broader than just the generated answer.
+
+Imagine your AI coding assistant needs to retrieve a submission, inspect an error, and then explain it.
+
+Your frontend could show updates such as:
+- Retrieving your submission...
+- Checking the error details...
+- Generating an explanation...
+Event streaming lets your application consume structured updates about agent activity, including messages, tool calls, state changes, and other events. LangChain's newer event-streaming API provides typed projections for these updates. 
+Docs by LangChain
+
+
+The difference: Streaming can mean displaying generated text progressively; event streaming can expose the wider sequence of events happening during an agent run.
+8. Structured output — Getting predictable data 📦
+Suppose your frontend needs an AI-generated code review.
+
+If the model responds with an ordinary paragraph, your frontend must somehow extract the severity, error, and fix.
+
+Instead, you can request a defined structure:
+{
+  "severity": "high",
+  "error": "Incorrect loop condition",
+  "suggested_fix": "Check the loop boundary"
+}
+
+
+Now your frontend can display each field in a separate UI element.
+
+LangChain supports structured responses using schemas, including Pydantic models. The framework can validate the response and return it in a structured form when configured appropriately. 
+Docs by LangChain
+
+
+This is especially useful when integrating AI into real applications, because your code can consume predictable fields instead of parsing arbitrary text.
+
+How all eight components fit together
+Messages
+
+User request and conversation context
+|
+Agent + Model
+|
+Interpret the request and decide what to do
+|
+Tools
+|
+Fetch data, call APIs, or perform permitted actions
+|
+Short-term memory
+|
+Preserve conversation and workflow state
+|
+Structured output + Streaming
+|
+Return usable results and deliver updates to the UI
+|
+Event streaming can report progress throughout the workflow, not just at the end.
+
+
+
+
+
+
+
